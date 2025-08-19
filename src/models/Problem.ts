@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose"
+import { Schema, Types, model } from "mongoose"
 
 export interface IProblem {
   number: number
@@ -15,10 +15,11 @@ export interface IProblem {
   }[]
   notes?: string
   link?: string
+  user: Types.ObjectId
 }
 
 const ProblemSchema = new Schema<IProblem>({
-  number: { type: Number, required: true, unique: true },
+  number: { type: Number, required: true },
   title: { type: String, required: true },
   difficulty: { type: String, enum: ["Easy", "Medium", "Hard"], required: true },
   tags: { type: [String], default: [] },
@@ -34,6 +35,7 @@ const ProblemSchema = new Schema<IProblem>({
   ],
   notes: String,
   link: String,
+  user: { type: Schema.Types.ObjectId, ref: "User", required: true },
 }, { timestamps: true })
 
 export const Problem = model<IProblem>("Problem", ProblemSchema)

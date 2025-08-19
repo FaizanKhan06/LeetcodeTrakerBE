@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { Problem } from "../models/Problem";
+import { auth } from "../middleware/auth";
 
 const router = Router();
 
 // Get all
-router.get("/", async (_, res) => {
+router.get("/", auth, async (req: any, res) => {
   try {
-    const problems = await Problem.find().sort({ number: 1 });
+    const problems = await Problem.find({ user: req.user._id }).sort({ number: 1 });
     res.json(problems);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -14,9 +15,9 @@ router.get("/", async (_, res) => {
 });
 
 // Get one
-router.get("/:id", async (req, res) => {
+router.get("/:id", auth, async (req: any, res) => {
   try {
-    const problem = await Problem.findById(req.params.id);
+    const problem = await Problem.findOne({_id: req.params.id, user: req.user._id});
     if (!problem) return res.status(404).json({ error: "Not found" });
     res.json(problem);
   } catch (err: any) {
@@ -25,12 +26,12 @@ router.get("/:id", async (req, res) => {
 });
 
 // Create
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req: any, res) => {
   try {
     const { number, status } = req.body;
 
     // Check if number already exists
-    const existing = await Problem.findOne({ number });
+    const existing = await Problem.findOne({ number: number, user: req.user._id });
     if (existing) {
       return res.status(400).json({ message: "Problem number already exists" });
     }
@@ -44,6 +45,8 @@ router.post("/", async (req, res) => {
       req.body.dateSolved = "";
     }
 
+    req.body.user = req.user._id;
+
     const problem = await Problem.create(req.body);
     res.status(201).json(problem);
   } catch (err: any) {
@@ -55,7 +58,7 @@ router.post("/", async (req, res) => {
 });
 
 // Update
-router.put("/:id", async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   try {
     // Auto set dateSolved if status = Solved
     if (req.body.status === "Solved"){
@@ -78,7 +81,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   try {
     const deleted = await Problem.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: "Not found" });
