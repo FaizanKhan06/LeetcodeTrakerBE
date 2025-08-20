@@ -99,7 +99,7 @@ router.delete("/me", auth, async (req: any, res) => {
         await CheatSheet.deleteMany({ user: userId });
         await Problem.deleteMany({ user: userId });
 
-        await req.user.remove();
+        await User.deleteOne({_id: userId});
         res.json({ ok: true, message: "Account deleted successfully" });
     } catch (err: any) {
         res.status(500).json({ error: err.message });
