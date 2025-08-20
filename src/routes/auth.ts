@@ -86,8 +86,14 @@ router.put("/me", auth, async (req: any, res) => {
 // Delete User
 router.delete("/me", auth, async (req: any, res) => {
     try {
+        const { password } = req.body;
+        if (!password) return res.status(400).json({ error: "Password is required to delete account" });
+
+        const valid = await bcrypt.compare(password, req.user.password);
+        if (!valid) return res.status(400).json({ error: "Invalid password" });
+
         await req.user.remove();
-        res.json({ ok: true });
+        res.json({ ok: true, message: "Account deleted successfully" });
     } catch (err: any) {
         res.status(500).json({ error: err.message });
     }
